@@ -6,7 +6,7 @@ from app.routers import charging_requests
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="EV Charging Scheduler")
+app = FastAPI(title="Smart EV Charging")
 
 app.add_middleware(
     CORSMiddleware,
