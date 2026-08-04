@@ -22,7 +22,6 @@ week to week, month to month, year to year.
 
 \`\`\`bash
 cp backend/.env.example backend/.env
-# edit backend/.env with your ENTSOE_TOKEN once approved
 
 docker compose up --build
 \`\`\`
