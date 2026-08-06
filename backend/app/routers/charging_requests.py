@@ -10,7 +10,10 @@ from app.scheduling import (
     pick_cheapest_hours,
     calculate_baseline_cost,
     calculate_optimized_cost,
+    calculate_hours_needed,
+    pick_cheapest_window,
 )
+from app.weather import get_forecast_low
 
 router = APIRouter(prefix="/charging-requests", tags=["charging-requests"])
 
@@ -46,6 +49,61 @@ def create_charging_request(req: schemas.ChargingRequestCreate, db: Session = De
     db.flush()  # assigns db_request.id without fully committing yet
 
     for price in chosen_hours:
+        db.add(models.ScheduledHour(charging_request_id=db_request.id, price_id=price.id))
+
+    db.commit()
+    db.refresh(db_request)
+    return db_request
+
+
+@router.post("/optimize", response_model=schemas.ChargingRequestOut)
+def optimize_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(get_db)):
+    now = datetime.now(timezone.utc)
+
+    forecast_low_temp_c = None
+    weather = get_forecast_low(req.place)
+    if weather:
+        _, forecast_low_temp_c = weather
+
+    hours_needed = calculate_hours_needed(
+        current_charge_percent=req.current_charge_percent,
+        target_charge_percent=req.target_charge_percent,
+        battery_capacity_kwh=req.battery_capacity_kwh,
+        charger_power_kw=req.charger_power_kw,
+        forecast_low_temp_c=forecast_low_temp_c,
+    )
+
+    available_prices = (
+        db.query(models.Price)
+        .filter(models.Price.timestamp >= now, models.Price.timestamp <= req.departure_time)
+        .order_by(models.Price.timestamp)
+        .all()
+    )
+
+    if len(available_prices) < hours_needed:
+        raise HTTPException(status_code=404, detail="Not enough price data between now and departure time")
+
+    window = pick_cheapest_window(available_prices, hours_needed)
+    baseline_cost = calculate_baseline_cost(available_prices, hours_needed, req.charger_power_kw)
+    optimized_cost = calculate_optimized_cost(window, req.charger_power_kw)
+
+    db_request = models.ChargingRequest(
+        hours_needed=hours_needed,
+        deadline=req.departure_time,
+        charger_power_kw=req.charger_power_kw,
+        baseline_cost=baseline_cost,
+        optimized_cost=optimized_cost,
+        current_charge_percent=req.current_charge_percent,
+        target_charge_percent=req.target_charge_percent,
+        battery_capacity_kwh=req.battery_capacity_kwh,
+        forecast_low_temp_c=forecast_low_temp_c,
+        start_time=window[0].timestamp,
+        finish_time=window[-1].timestamp,
+    )
+    db.add(db_request)
+    db.flush()
+
+    for price in window:
         db.add(models.ScheduledHour(charging_request_id=db_request.id, price_id=price.id))
 
     db.commit()
