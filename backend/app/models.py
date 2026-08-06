@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, TIMESTAMP, ForeignKey, text
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -20,7 +20,14 @@ class ChargingRequest(Base):
     charger_power_kw = Column(Numeric(5, 2), nullable=False)
     baseline_cost = Column(Numeric(8, 2), nullable=False)
     optimized_cost = Column(Numeric(8, 2), nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default="now()")
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+
+    current_charge_percent = Column(Numeric(5, 2), nullable=True)
+    target_charge_percent = Column(Numeric(5, 2), nullable=True)
+    battery_capacity_kwh = Column(Numeric(6, 2), nullable=True)
+    forecast_low_temp_c = Column(Numeric(5, 2), nullable=True)
+    start_time = Column(TIMESTAMP(timezone=True), nullable=True)
+    finish_time = Column(TIMESTAMP(timezone=True), nullable=True)
 
     scheduled_hours = relationship("ScheduledHour", back_populates="request", cascade="all, delete-orphan")
 
