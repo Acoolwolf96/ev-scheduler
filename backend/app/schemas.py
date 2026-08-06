@@ -24,6 +24,11 @@ class ChargingRequestCreate(BaseModel):
     charger_power_kw: float
 
 
+class TodayPricesOut(BaseModel):
+    prices: List[PriceOut]
+    cheapest: PriceOut | None
+
+
 class ChargingRequestOut(BaseModel):
     id: int
     hours_needed: int

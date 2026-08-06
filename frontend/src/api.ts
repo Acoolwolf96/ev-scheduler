@@ -27,3 +27,25 @@ export async function getChargingRequests(): Promise<ChargingRequestOut[]> {
 
   return response.json();
 }
+
+export async function getTodaysPrices(): Promise<TodayPricesOut> {
+  const response = await fetch(`${API_URL}/prices/today`);
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function getSavingsSummary(
+  groupBy: 'day' | 'week' | 'month' | 'year'
+): Promise<PeriodSummaryOut[]> {
+  const response = await fetch(`${API_URL}/charging-requests/summary?group_by=${groupBy}`);
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}

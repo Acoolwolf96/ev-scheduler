@@ -23,3 +23,16 @@ export interface ChargingRequestOut {
   created_at: string;
   scheduled_hours: ScheduledHourOut[];
 }
+
+export interface TodayPricesOut {
+  prices: PriceOut[];
+  cheapest: PriceOut | null;
+}
+
+export interface PeriodSummaryOut {
+  period_start: string;
+  total_baseline: number;
+  total_optimized: number;
+  total_saved: number;
+  request_count: number;
+}
