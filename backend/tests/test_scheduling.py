@@ -112,3 +112,26 @@ def test_pick_cheapest_window_finds_contiguous_block():
 def test_pick_cheapest_window_returns_empty_when_not_enough_data():
     window = pick_cheapest_window([PRICES[0]], hours_needed=3)
     assert window == []
+
+
+def test_two_pass_refinement_would_change_result_in_cold_scenario():
+    """Simulates the interview-relevant case: the 24h worst-case estimate
+    and the actual scheduled-window temperature disagree, and the second
+    pass should produce a different (larger) hours_needed than the first."""
+    rough_estimate_hours = calculate_hours_needed(
+        current_charge_percent=25,
+        target_charge_percent=90,
+        battery_capacity_kwh=60,
+        charger_power_kw=11,
+        forecast_low_temp_c=5,
+    )
+    refined_hours = calculate_hours_needed(
+        current_charge_percent=25,
+        target_charge_percent=90,
+        battery_capacity_kwh=60,
+        charger_power_kw=11,
+        forecast_low_temp_c=-15,
+    )
+    assert rough_estimate_hours == 4
+    assert refined_hours == 5
+    assert refined_hours > rough_estimate_hours

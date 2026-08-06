@@ -13,7 +13,7 @@ from app.scheduling import (
     calculate_hours_needed,
     pick_cheapest_window,
 )
-from app.weather import get_forecast_low
+from app.weather import get_forecast_low, get_forecast_temp_range
 
 router = APIRouter(prefix="/charging-requests", tags=["charging-requests"])
 
@@ -60,6 +60,7 @@ def create_charging_request(req: schemas.ChargingRequestCreate, db: Session = De
 def optimize_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(get_db)):
     now = datetime.now(timezone.utc)
 
+    # First pass: rough estimate using the worst case in the next 24h
     forecast_low_temp_c = None
     weather = get_forecast_low(req.place)
     if weather:
@@ -84,6 +85,23 @@ def optimize_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Not enough price data between now and departure time")
 
     window = pick_cheapest_window(available_prices, hours_needed)
+
+    # Second pass: refine using the actual temperature during the tentative window,
+    # rather than trusting the worst-case-in-24h estimate from the first pass
+    if window:
+        actual_temp = get_forecast_temp_range(window[0].timestamp, window[-1].timestamp, req.place)
+        if actual_temp is not None and actual_temp != forecast_low_temp_c:
+            forecast_low_temp_c = actual_temp
+            hours_needed = calculate_hours_needed(
+                current_charge_percent=req.current_charge_percent,
+                target_charge_percent=req.target_charge_percent,
+                battery_capacity_kwh=req.battery_capacity_kwh,
+                charger_power_kw=req.charger_power_kw,
+                forecast_low_temp_c=forecast_low_temp_c,
+            )
+            if len(available_prices) >= hours_needed:
+                window = pick_cheapest_window(available_prices, hours_needed)
+
     baseline_cost = calculate_baseline_cost(available_prices, hours_needed, req.charger_power_kw)
     optimized_cost = calculate_optimized_cost(window, req.charger_power_kw)
 

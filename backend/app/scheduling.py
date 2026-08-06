@@ -69,3 +69,25 @@ def pick_cheapest_window(available_prices: List[Price], hours_needed: int) -> Li
             best_start = i
 
     return available_prices[best_start : best_start + hours_needed]
+
+def test_two_pass_refinement_would_change_result_in_cold_scenario():
+    """Simulates the interview-relevant case: the 24h worst-case estimate
+    and the actual scheduled-window temperature disagree, and the second
+    pass should produce a different (larger) hours_needed than the first."""
+    rough_estimate_hours = calculate_hours_needed(
+        current_charge_percent=25,
+        target_charge_percent=90,
+        battery_capacity_kwh=60,
+        charger_power_kw=11,
+        forecast_low_temp_c=5,  # rough 24h low: mild, no penalty
+    )
+    refined_hours = calculate_hours_needed(
+        current_charge_percent=25,
+        target_charge_percent=90,
+        battery_capacity_kwh=60,
+        charger_power_kw=11,
+        forecast_low_temp_c=-15,  # actual temp during the charging window: cold
+    )
+    assert rough_estimate_hours == 4
+    assert refined_hours == 5
+    assert refined_hours > rough_estimate_hours
