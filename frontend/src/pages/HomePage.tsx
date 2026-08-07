@@ -203,43 +203,48 @@ function HomePage({ state, update }: HomePageProps) {
           </div>
 
           <div className="settings-row">
-            <span>Battery</span>
-            <input
-              type="number"
-              className="power-input"
-              value={batteryCapacityKwh}
-              min={1}
-              onChange={(e) => {
-                setBatteryCapacityKwh(Number(e.target.value));
-                saveSetting('batteryCapacityKwh', e.target.value);
-              }}
-            />
-            <span>kWh</span>
+            <div className="setting-group">
+              <span>Battery</span>
+              <input
+                type="number"
+                className="power-input"
+                value={batteryCapacityKwh}
+                min={1}
+                onChange={(e) => {
+                  setBatteryCapacityKwh(Number(e.target.value));
+                  saveSetting('batteryCapacityKwh', e.target.value);
+                }}
+              />
+              <span>kWh</span>
+            </div>
 
-            <span style={{ marginLeft: 16 }}>Charger</span>
-            <input
-              type="number"
-              className="power-input"
-              value={chargerPowerKw}
-              min={1}
-              onChange={(e) => {
-                setChargerPowerKw(Number(e.target.value));
-                saveSetting('chargerPowerKw', e.target.value);
-              }}
-            />
-            <span>kW</span>
+            <div className="setting-group">
+              <span>Charger</span>
+              <input
+                type="number"
+                className="power-input"
+                value={chargerPowerKw}
+                min={1}
+                onChange={(e) => {
+                  setChargerPowerKw(Number(e.target.value));
+                  saveSetting('chargerPowerKw', e.target.value);
+                }}
+              />
+              <span>kW</span>
+            </div>
 
-            <span style={{ marginLeft: 16 }}>Location</span>
-            <input
-              type="text"
-              className="power-input"
-              style={{ width: 90 }}
-              value={place}
-              onChange={(e) => {
-                setPlace(e.target.value);
-                saveSetting('place', e.target.value);
-              }}
-            />
+            <div className="setting-group">
+              <span>Location</span>
+              <input
+                type="text"
+                className="power-input location-input"
+                value={place}
+                onChange={(e) => {
+                  setPlace(e.target.value);
+                  saveSetting('place', e.target.value);
+                }}
+              />
+            </div>
           </div>
 
           <button type="submit" className="submit" disabled={submitting}>
