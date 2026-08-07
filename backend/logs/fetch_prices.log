@@ -142,3 +142,76 @@ Traceback (most recent call last):
   File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/requests/adapters.py", line 713, in send
     raise ReadTimeout(e, request=request)
 requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='web-api.tp.entsoe.eu', port=443): Read timed out. (read timeout=30)
+Traceback (most recent call last):
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2118, in _exec_insertmany_context
+    dialect.do_execute(
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "prices_timestamp_key"
+DETAIL:  Key ("timestamp")=(2026-08-09 22:00:00+00) already exists.
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/scheduler/ev-scheduler/backend/fetch_prices.py", line 68, in <module>
+    fetch_day_ahead_prices()
+  File "/home/scheduler/ev-scheduler/backend/fetch_prices.py", line 61, in fetch_day_ahead_prices
+    db.commit()
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2028, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4352, in flush
+    self._flush(objects)
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4487, in _flush
+    with util.safe_reraise():
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4448, in _flush
+    flush_context.execute()
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 1143, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1418, in execute
+    return meth(
+           ^^^^^
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1844, in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2126, in _exec_insertmany_context
+    self._handle_dbapi_exception(
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2118, in _exec_insertmany_context
+    dialect.do_execute(
+  File "/home/scheduler/ev-scheduler/backend/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "prices_timestamp_key"
+DETAIL:  Key ("timestamp")=(2026-08-09 22:00:00+00) already exists.
+
+[SQL: INSERT INTO prices (timestamp, price_eur_kwh) SELECT p0::TIMESTAMP WITH TIME ZONE, p1::NUMERIC(6, 4) FROM (VALUES (%(timestamp__0)s, %(price_eur_kwh__0)s, 0), (%(timestamp__1)s, %(price_eur_kwh__1)s, 1), (%(timestamp__2)s, %(price_eur_kwh__2)s, 2), ( ... 3234 characters truncated ... s, 70)) AS imp_sen(p0, p1, sen_counter) ORDER BY sen_counter RETURNING prices.id, prices.id AS id__1]
+[parameters: {'timestamp__0': datetime.datetime(2026, 8, 9, 22, 0), 'price_eur_kwh__0': 0.00518, 'timestamp__1': datetime.datetime(2026, 8, 9, 23, 0), 'price_eur_kwh__1': 0.00587, 'timestamp__2': datetime.datetime(2026, 8, 10, 0, 0), 'price_eur_kwh__2': 0.00799, 'timestamp__3': datetime.datetime(2026, 8, 10, 1, 0), 'price_eur_kwh__3': 0.00975, 'timestamp__4': datetime.datetime(2026, 8, 10, 2, 0), 'price_eur_kwh__4': 0.0062, 'timestamp__5': datetime.datetime(2026, 8, 10, 3, 0), 'price_eur_kwh__5': 0.00718, 'timestamp__6': datetime.datetime(2026, 8, 10, 4, 0), 'price_eur_kwh__6': 0.00817, 'timestamp__7': datetime.datetime(2026, 8, 10, 5, 0), 'price_eur_kwh__7': 0.00818, 'timestamp__8': datetime.datetime(2026, 8, 10, 6, 0), 'price_eur_kwh__8': 0.00692, 'timestamp__9': datetime.datetime(2026, 8, 10, 7, 0), 'price_eur_kwh__9': 0.00605, 'timestamp__10': datetime.datetime(2026, 8, 10, 8, 0), 'price_eur_kwh__10': 0.006059999999999999, 'timestamp__11': datetime.datetime(2026, 8, 10, 9, 0), 'price_eur_kwh__11': 0.005860000000000001, 'timestamp__12': datetime.datetime(2026, 8, 10, 10, 0), 'price_eur_kwh__12': 0.00766, 'timestamp__13': datetime.datetime(2026, 8, 10, 11, 0), 'price_eur_kwh__13': 0.008150000000000001, 'timestamp__14': datetime.datetime(2026, 8, 10, 12, 0), 'price_eur_kwh__14': 0.00799, 'timestamp__15': datetime.datetime(2026, 8, 10, 13, 0), 'price_eur_kwh__15': 0.00677, 'timestamp__16': datetime.datetime(2026, 8, 10, 14, 0), 'price_eur_kwh__16': 0.009859999999999999, 'timestamp__17': datetime.datetime(2026, 8, 10, 15, 0), 'price_eur_kwh__17': 0.00799, 'timestamp__18': datetime.datetime(2026, 8, 10, 16, 0), 'price_eur_kwh__18': 0.00671, 'timestamp__19': datetime.datetime(2026, 8, 10, 17, 0), 'price_eur_kwh__19': 0.0063, 'timestamp__20': datetime.datetime(2026, 8, 10, 18, 0), 'price_eur_kwh__20': 0.007690000000000001, 'timestamp__21': datetime.datetime(2026, 8, 10, 19, 0), 'price_eur_kwh__21': 0.00604, 'timestamp__22': datetime.datetime(2026, 8, 10, 20, 0), 'price_eur_kwh__22': 0.00664, 'timestamp__23': datetime.datetime(2026, 8, 10, 21, 0), 'price_eur_kwh__23': 0.00605, 'timestamp__24': datetime.datetime(2026, 8, 9, 22, 0), 'price_eur_kwh__24': 0.00183 ... 42 parameters truncated ... 'timestamp__46': datetime.datetime(2026, 8, 10, 21, 0), 'price_eur_kwh__46': 0.00743, 'timestamp__47': datetime.datetime(2026, 8, 10, 22, 0), 'price_eur_kwh__47': 0.00509, 'timestamp__48': datetime.datetime(2026, 8, 10, 23, 0), 'price_eur_kwh__48': 0.00683, 'timestamp__49': datetime.datetime(2026, 8, 11, 0, 0), 'price_eur_kwh__49': 0.00827, 'timestamp__50': datetime.datetime(2026, 8, 11, 1, 0), 'price_eur_kwh__50': 0.01509, 'timestamp__51': datetime.datetime(2026, 8, 11, 2, 0), 'price_eur_kwh__51': 0.01083, 'timestamp__52': datetime.datetime(2026, 8, 11, 3, 0), 'price_eur_kwh__52': 0.013869999999999999, 'timestamp__53': datetime.datetime(2026, 8, 11, 4, 0), 'price_eur_kwh__53': 0.01508, 'timestamp__54': datetime.datetime(2026, 8, 11, 5, 0), 'price_eur_kwh__54': 0.01176, 'timestamp__55': datetime.datetime(2026, 8, 11, 6, 0), 'price_eur_kwh__55': 0.01598, 'timestamp__56': datetime.datetime(2026, 8, 11, 7, 0), 'price_eur_kwh__56': 0.01081, 'timestamp__57': datetime.datetime(2026, 8, 11, 8, 0), 'price_eur_kwh__57': 0.00827, 'timestamp__58': datetime.datetime(2026, 8, 11, 9, 0), 'price_eur_kwh__58': 0.0067599999999999995, 'timestamp__59': datetime.datetime(2026, 8, 11, 10, 0), 'price_eur_kwh__59': 0.00826, 'timestamp__60': datetime.datetime(2026, 8, 11, 11, 0), 'price_eur_kwh__60': 0.00763, 'timestamp__61': datetime.datetime(2026, 8, 11, 12, 0), 'price_eur_kwh__61': 0.00604, 'timestamp__62': datetime.datetime(2026, 8, 11, 13, 0), 'price_eur_kwh__62': 0.00538, 'timestamp__63': datetime.datetime(2026, 8, 11, 14, 0), 'price_eur_kwh__63': 0.00619, 'timestamp__64': datetime.datetime(2026, 8, 11, 15, 0), 'price_eur_kwh__64': 0.00544, 'timestamp__65': datetime.datetime(2026, 8, 11, 16, 0), 'price_eur_kwh__65': 0.00474, 'timestamp__66': datetime.datetime(2026, 8, 11, 17, 0), 'price_eur_kwh__66': 0.00392, 'timestamp__67': datetime.datetime(2026, 8, 11, 18, 0), 'price_eur_kwh__67': 0.0048200000000000005, 'timestamp__68': datetime.datetime(2026, 8, 11, 19, 0), 'price_eur_kwh__68': 0.00436, 'timestamp__69': datetime.datetime(2026, 8, 11, 20, 0), 'price_eur_kwh__69': 0.0036, 'timestamp__70': datetime.datetime(2026, 8, 11, 21, 0), 'price_eur_kwh__70': 0.00325}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
