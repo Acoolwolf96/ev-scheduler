@@ -51,3 +51,31 @@ export interface OptimizeChargeRequest {
   departure_time: string;
   place: string;
 }
+
+export interface ChargingPlanPreview {
+  hours_needed: number;
+  baseline_cost: number;
+  optimized_cost: number;
+  forecast_low_temp_c: number | null;
+  start_time: string;
+  finish_time: string;
+  scheduled_hours: PriceOut[];
+}
+
+export type DeparturePreset = 'tonight' | 'tomorrow-morning' | 'tomorrow-evening' | 'custom';
+
+export interface PriceChangeNotice {
+  previous: ChargingPlanPreview;
+  updated: ChargingRequestOut;
+}
+
+export interface HomePlanState {
+  currentPercent: number;
+  targetPercent: number;
+  preset: DeparturePreset;
+  departureTime: string;
+  preview: ChargingPlanPreview | null;
+  lastRequest: OptimizeChargeRequest | null;
+  confirmedId: number | null;
+  priceChangeNotice: PriceChangeNotice | null;
+}

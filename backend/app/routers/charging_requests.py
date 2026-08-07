@@ -19,46 +19,10 @@ from app.weather import get_forecast_low, get_forecast_temp_range
 router = APIRouter(prefix="/charging-requests", tags=["charging-requests"])
 
 
-@router.post("/", response_model=schemas.ChargingRequestOut)
-def create_charging_request(req: schemas.ChargingRequestCreate, db: Session = Depends(get_db)):
-    now = datetime.now(timezone.utc)
-
-    available_prices = (
-        db.query(models.Price)
-        .filter(models.Price.timestamp >= now, models.Price.timestamp <= req.deadline)
-        .all()
-    )
-
-    if len(available_prices) < req.hours_needed:
-        raise HTTPException(
-            status_code=404,
-            detail="Not enough price data between now and the deadline",
-        )
-
-    chosen_hours = pick_cheapest_hours(available_prices, req.hours_needed)
-    baseline = calculate_baseline_cost(available_prices, req.hours_needed, req.charger_power_kw)
-    optimized = calculate_optimized_cost(chosen_hours, req.charger_power_kw)
-
-    db_request = models.ChargingRequest(
-        hours_needed=req.hours_needed,
-        deadline=req.deadline,
-        charger_power_kw=req.charger_power_kw,
-        baseline_cost=baseline,
-        optimized_cost=optimized,
-    )
-    db.add(db_request)
-    db.flush()
-
-    for price in chosen_hours:
-        db.add(models.ScheduledHour(charging_request_id=db_request.id, price_id=price.id))
-
-    db.commit()
-    db.refresh(db_request)
-    return db_request
-
-
-@router.post("/optimize", response_model=schemas.ChargingRequestOut)
-def optimize_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(get_db)):
+def _compute_plan(req: schemas.OptimizeChargeRequest, db: Session) -> dict:
+    """Shared calculation logic for both preview and confirm. Runs the full
+    two-pass weather refinement and returns the plan without touching the
+    database — callers decide whether to persist it."""
     now = datetime.now(timezone.utc)
 
     forecast_low_temp_c = None
@@ -103,16 +67,88 @@ def optimize_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(
     baseline_cost = calculate_baseline_cost(available_prices, hours_needed, req.charger_power_kw)
     optimized_cost = calculate_optimized_cost(window, req.charger_power_kw)
 
+    return {
+        "hours_needed": hours_needed,
+        "baseline_cost": baseline_cost,
+        "optimized_cost": optimized_cost,
+        "forecast_low_temp_c": forecast_low_temp_c,
+        "window": window,
+    }
+
+
+@router.post("/", response_model=schemas.ChargingRequestOut)
+def create_charging_request(req: schemas.ChargingRequestCreate, db: Session = Depends(get_db)):
+    now = datetime.now(timezone.utc)
+
+    available_prices = (
+        db.query(models.Price)
+        .filter(models.Price.timestamp >= now, models.Price.timestamp <= req.deadline)
+        .all()
+    )
+
+    if len(available_prices) < req.hours_needed:
+        raise HTTPException(
+            status_code=404,
+            detail="Not enough price data between now and the deadline",
+        )
+
+    chosen_hours = pick_cheapest_hours(available_prices, req.hours_needed)
+    baseline = calculate_baseline_cost(available_prices, req.hours_needed, req.charger_power_kw)
+    optimized = calculate_optimized_cost(chosen_hours, req.charger_power_kw)
+
     db_request = models.ChargingRequest(
-        hours_needed=hours_needed,
+        hours_needed=req.hours_needed,
+        deadline=req.deadline,
+        charger_power_kw=req.charger_power_kw,
+        baseline_cost=baseline,
+        optimized_cost=optimized,
+    )
+    db.add(db_request)
+    db.flush()
+
+    for price in chosen_hours:
+        db.add(models.ScheduledHour(charging_request_id=db_request.id, price_id=price.id))
+
+    db.commit()
+    db.refresh(db_request)
+    return db_request
+
+
+@router.post("/optimize/preview", response_model=schemas.ChargingPlanPreview)
+def preview_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(get_db)):
+    """Calculate a plan without saving anything — lets the user see the
+    result before committing it to their history."""
+    plan = _compute_plan(req, db)
+    window = plan["window"]
+
+    return schemas.ChargingPlanPreview(
+        hours_needed=plan["hours_needed"],
+        baseline_cost=plan["baseline_cost"],
+        optimized_cost=plan["optimized_cost"],
+        forecast_low_temp_c=plan["forecast_low_temp_c"],
+        start_time=window[0].timestamp,
+        finish_time=window[-1].timestamp,
+        scheduled_hours=[schemas.PriceOut.model_validate(p) for p in window],
+    )
+
+
+@router.post("/optimize/confirm", response_model=schemas.ChargingRequestOut)
+def confirm_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(get_db)):
+    """Recalculates the plan fresh (never trusts client-supplied costs) and
+    actually saves it — this is the real commitment point."""
+    plan = _compute_plan(req, db)
+    window = plan["window"]
+
+    db_request = models.ChargingRequest(
+        hours_needed=plan["hours_needed"],
         deadline=req.departure_time,
         charger_power_kw=req.charger_power_kw,
-        baseline_cost=baseline_cost,
-        optimized_cost=optimized_cost,
+        baseline_cost=plan["baseline_cost"],
+        optimized_cost=plan["optimized_cost"],
         current_charge_percent=req.current_charge_percent,
         target_charge_percent=req.target_charge_percent,
         battery_capacity_kwh=req.battery_capacity_kwh,
-        forecast_low_temp_c=forecast_low_temp_c,
+        forecast_low_temp_c=plan["forecast_low_temp_c"],
         start_time=window[0].timestamp,
         finish_time=window[-1].timestamp,
     )

@@ -67,3 +67,13 @@ class OptimizeChargeRequest(BaseModel):
     charger_power_kw: float
     departure_time: datetime
     place: str = "Tampere"
+
+
+class ChargingPlanPreview(BaseModel):
+    hours_needed: int
+    baseline_cost: float
+    optimized_cost: float
+    forecast_low_temp_c: float | None
+    start_time: datetime
+    finish_time: datetime
+    scheduled_hours: List[PriceOut]

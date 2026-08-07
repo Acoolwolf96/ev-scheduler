@@ -632,3 +632,69 @@
   filter: invert(0.7);
   cursor: pointer;
 }
+
+.confirm-btn {
+  width: 100%;
+  margin-top: 16px;
+  background: var(--accent-cool);
+  color: #04342C;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.confirm-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.saved-badge {
+  width: 100%;
+  margin-top: 16px;
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px solid var(--accent-cool);
+  color: var(--accent-cool);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.price-change-notice {
+  margin-top: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--accent-warm);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.price-change-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: var(--accent-warm);
+}
+
+.price-change-notice p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.price-change-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  margin-bottom: 4px;
+}

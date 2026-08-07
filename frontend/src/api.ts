@@ -4,6 +4,7 @@ import type {
   TodayPricesOut,
   PeriodSummaryOut,
   OptimizeChargeRequest,
+  ChargingPlanPreview,
 } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -56,10 +57,26 @@ export async function getSavingsSummary(
   return response.json();
 }
 
-export async function optimizeCharging(
+export async function previewCharging(
+  data: OptimizeChargeRequest
+): Promise<ChargingPlanPreview> {
+  const response = await fetch(`${API_URL}/charging-requests/optimize/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function confirmCharging(
   data: OptimizeChargeRequest
 ): Promise<ChargingRequestOut> {
-  const response = await fetch(`${API_URL}/charging-requests/optimize`, {
+  const response = await fetch(`${API_URL}/charging-requests/optimize/confirm`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
