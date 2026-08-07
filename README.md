@@ -56,7 +56,7 @@ This is deliberately built in phases: pure software first.
 
 \`\`\`bash
 cp backend/.env.example backend/.env
-# edit backend/.env with your ENTSOE_TOKEN
+
 
 docker compose up --build
 \`\`\`

@@ -24,19 +24,6 @@ class ChargingRequestCreate(BaseModel):
     charger_power_kw: float
 
 
-class TodayPricesOut(BaseModel):
-    prices: List[PriceOut]
-    cheapest: PriceOut | None
-
-class OptimizeChargeRequest(BaseModel):
-    current_charge_percent: float
-    target_charge_percent: float
-    battery_capacity_kwh: float
-    charger_power_kw: float
-    departure_time: datetime
-    place: str = "Helsinki"
-
-
 class ChargingRequestOut(BaseModel):
     id: int
     hours_needed: int
@@ -55,3 +42,28 @@ class ChargingRequestOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TodayPricesOut(BaseModel):
+    prices: List[PriceOut]
+    cheapest: PriceOut | None
+
+    class Config:
+        from_attributes = True
+
+
+class PeriodSummaryOut(BaseModel):
+    period_start: datetime
+    total_baseline: float
+    total_optimized: float
+    total_saved: float
+    request_count: int
+
+
+class OptimizeChargeRequest(BaseModel):
+    current_charge_percent: float
+    target_charge_percent: float
+    battery_capacity_kwh: float
+    charger_power_kw: float
+    departure_time: datetime
+    place: str = "Tampere"

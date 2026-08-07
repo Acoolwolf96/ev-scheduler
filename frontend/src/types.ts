@@ -22,6 +22,12 @@ export interface ChargingRequestOut {
   optimized_cost: number;
   created_at: string;
   scheduled_hours: ScheduledHourOut[];
+  current_charge_percent: number | null;
+  target_charge_percent: number | null;
+  battery_capacity_kwh: number | null;
+  forecast_low_temp_c: number | null;
+  start_time: string | null;
+  finish_time: string | null;
 }
 
 export interface TodayPricesOut {
@@ -35,4 +41,13 @@ export interface PeriodSummaryOut {
   total_optimized: number;
   total_saved: number;
   request_count: number;
+}
+
+export interface OptimizeChargeRequest {
+  current_charge_percent: number;
+  target_charge_percent: number;
+  battery_capacity_kwh: number;
+  charger_power_kw: number;
+  departure_time: string;
+  place: string;
 }

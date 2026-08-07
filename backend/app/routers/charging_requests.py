@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -46,7 +47,7 @@ def create_charging_request(req: schemas.ChargingRequestCreate, db: Session = De
         optimized_cost=optimized,
     )
     db.add(db_request)
-    db.flush()  # assigns db_request.id without fully committing yet
+    db.flush()
 
     for price in chosen_hours:
         db.add(models.ScheduledHour(charging_request_id=db_request.id, price_id=price.id))
@@ -60,7 +61,6 @@ def create_charging_request(req: schemas.ChargingRequestCreate, db: Session = De
 def optimize_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(get_db)):
     now = datetime.now(timezone.utc)
 
-    # First pass: rough estimate using the worst case in the next 24h
     forecast_low_temp_c = None
     weather = get_forecast_low(req.place)
     if weather:
@@ -86,8 +86,6 @@ def optimize_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(
 
     window = pick_cheapest_window(available_prices, hours_needed)
 
-    # Second pass: refine using the actual temperature during the tentative window,
-    # rather than trusting the worst-case-in-24h estimate from the first pass
     if window:
         actual_temp = get_forecast_temp_range(window[0].timestamp, window[-1].timestamp, req.place)
         if actual_temp is not None and actual_temp != forecast_low_temp_c:
@@ -127,6 +125,37 @@ def optimize_charging(req: schemas.OptimizeChargeRequest, db: Session = Depends(
     db.commit()
     db.refresh(db_request)
     return db_request
+
+
+@router.get("/summary", response_model=List[schemas.PeriodSummaryOut])
+def get_savings_summary(group_by: str = "month", db: Session = Depends(get_db)):
+    if group_by not in ("day", "week", "month", "year"):
+        raise HTTPException(status_code=400, detail="group_by must be one of: day, week, month, year")
+
+    period = func.date_trunc(group_by, models.ChargingRequest.created_at).label("period_start")
+
+    rows = (
+        db.query(
+            period,
+            func.sum(models.ChargingRequest.baseline_cost).label("total_baseline"),
+            func.sum(models.ChargingRequest.optimized_cost).label("total_optimized"),
+            func.count(models.ChargingRequest.id).label("request_count"),
+        )
+        .group_by(period)
+        .order_by(period.desc())
+        .all()
+    )
+
+    return [
+        schemas.PeriodSummaryOut(
+            period_start=row.period_start,
+            total_baseline=float(row.total_baseline),
+            total_optimized=float(row.total_optimized),
+            total_saved=float(row.total_baseline) - float(row.total_optimized),
+            request_count=row.request_count,
+        )
+        for row in rows
+    ]
 
 
 @router.get("/", response_model=List[schemas.ChargingRequestOut])
