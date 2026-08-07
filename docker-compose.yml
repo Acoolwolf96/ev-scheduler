@@ -19,6 +19,7 @@ services:
     environment:
       DATABASE_URL: postgresql://scheduler:scheduler@db:5432/scheduler
       ENTSOE_TOKEN: ${ENTSOE_TOKEN}
+      FINGRID_API_KEY: ${FINGRID_API_KEY}
     ports:
       - "8000:8000"
 

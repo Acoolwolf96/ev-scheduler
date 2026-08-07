@@ -77,3 +77,8 @@ class ChargingPlanPreview(BaseModel):
     start_time: datetime
     finish_time: datetime
     scheduled_hours: List[PriceOut]
+
+
+class CarbonIntensityOut(BaseModel):
+    timestamp: datetime | None
+    value_gco2_kwh: float | None

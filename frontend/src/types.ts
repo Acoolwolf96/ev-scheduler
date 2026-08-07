@@ -79,3 +79,8 @@ export interface HomePlanState {
   confirmedId: number | null;
   priceChangeNotice: PriceChangeNotice | null;
 }
+
+export interface CarbonIntensityOut {
+  timestamp: string | null;
+  value_gco2_kwh: number | null;
+}

@@ -5,6 +5,7 @@ import type {
   PeriodSummaryOut,
   OptimizeChargeRequest,
   ChargingPlanPreview,
+  CarbonIntensityOut,
 } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -81,6 +82,16 @@ export async function confirmCharging(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function getCurrentCarbon(): Promise<CarbonIntensityOut> {
+  const response = await fetch(`${API_URL}/carbon/current`);
 
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
