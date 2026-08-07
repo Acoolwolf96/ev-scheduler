@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { previewCharging, confirmCharging } from '../api';
 import type { DeparturePreset, HomePlanState } from '../types';
 import { formatPricePerKwh } from '../utils';
+import CarbonStat from '../CarbonStat';
 
 interface HomePageProps {
   state: HomePlanState;
@@ -127,6 +128,8 @@ function HomePage({ state, update }: HomePageProps) {
         Tell it your battery, your charger, and when you're leaving — it finds the
         cheapest window that gets you there, accounting for weather.
       </p>
+
+      <CarbonStat />
 
       <div className="card">
         <form onSubmit={handleSubmit}>
